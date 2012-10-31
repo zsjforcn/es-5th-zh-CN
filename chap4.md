@@ -75,7 +75,7 @@ _类型（type）_
 
 _原始值（primitive value）_
 
-定义在规范第8节中某个类型（Undefined、Null、Boolean、Number或String）的成员。
+定义在规范第8条中某个类型（Undefined、Null、Boolean、Number或String）的成员。
 
 > 注：每个原始值是一个数据，是语言实现最底层级别直接提供的。
 
