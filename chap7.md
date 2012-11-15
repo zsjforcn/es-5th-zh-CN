@@ -145,25 +145,374 @@ ECMAScript实现必须识别定义在Unicode3.0中所有的空白符。较新版
 
 ## 7.4 注释
 
-## 7.5 标记符片段
+注释有的是单行，有的是多行。多行的注释不能嵌套。
+
+单行注释可以包含除了 *LineTerminator* 以外的任何字符，一个令牌的一般性规则总是尽可能的符合要求，单行注释是由“//”标记开始到该行结束之间的所有字符构成。因此，该行结束的 *LineTerminator* 并不属于该单行注释的一部分；它只被看作词法中的分隔，是句法输入元素流中的一部分而已。这一点非常重要，因为它暗示了单行注释存在与否都不影响分号自动插入的处理流程（见7.9）。
+
+注释的行为就像空白符，会被直接丢弃。不过如果 *MultiLineComment* 包含一个行终止符，那么为了被句法解析，整个注释块被看作是一个 *LineTerminator* 。
+
+**语法**
+
+> *Comment* ::  
+>
+>> *MultiLineComment* 
+>>
+>> *SingleLineComment* 
+
+> *MultiLineComment* ::  
+>
+>> /\* *MultiLineCommentChars* <sub>opt</sub> \*/ 
+
+> *MultiLineCommentChars* ::  
+>
+>> *MultiLineNotAsteriskChar* *MultiLineCommentChars* <sub>opt</sub>
+>> 
+>> \* *PostAsteriskCommentChars* <sub>opt</sub>
+ 
+> *PostAsteriskCommentChars* ::  
+>
+>> *MultiLineNotForwardSlashOrAsteriskChar* *MultiLineCommentChars* <sub>opt</sub>
+>>
+>> \* *PostAsteriskCommentChars* <sub>opt</sub> 
+
+> *MultiLineNotAsteriskChar* ::  
+>
+>> *SourceCharacter* **but not** *asterisk*  \* 
+
+> *MultiLineNotForwardSlashOrAsteriskChar* ::  
+>
+>> *SourceCharacter*  **but not** *forward-slash* / **or**  *asterisk*  \* 
+
+> *SingleLineComment* ::  
+>
+>> // *SingleLineCommentChars* <sub>opt</sub>
+ 
+> SingleLineCommentChars  ::  
+>
+>> *SingleLineCommentChar* *SingleLineCommentChars* <sub>opt</sub> 
+
+> *SingleLineCommentChar* ::  
+>
+>> *SourceCharacter*   **but not** *LineTerminator*
+
+## 7.5 令牌
+
+**语法**
+  
+> *Token*  ::  
+>
+>> *IdentifierName* 
+>>
+>> *Punctuator* 
+>>
+>> *NumericLiteral* 
+>>
+>> *StringLiteral*
+
+> 注： *DivPunctuator* 和 *RegularExpressionLiteral* 部件定义了令牌，但是它们没有包含在 *Token* 部件中。
 
 ## 7.6 标记符名称和标记符
 
+标记符名称是按照Unicode标准第5章的“标记符”小节给出的语法（有一些微小的修改）翻译出来的令牌。 *Identifier* 就是非 *ReservedWord* （见7.6.1）的 *IdentifierName* 。Unicode标记符语法是基于Unicode标准指定的规范和信息字符类目。这些字符在Unicode标准版本3.0的指定类目中，它们必须被所有遵守ECMAScript的实现所视作出自这些类目。
+
+本规范指定的特殊字符还允许有：美元符（$）和下划线（_）可以在 *IdentifierName* 中的任何位置。
+
+*IdentifierName* 中还允许有Unicode转义字符序列，它们只是形成 *IdentifierName* 中的单个字符， *UnicodeEscapeSequence* 计算为字符值（见7.8.4）。 *UnicodeEscapeSequence* 前面的“\”不是该 *IdentifierName* 的一部分。如果 *UnicodeEscapeSequence* 是非法字符，就不能将其放入 *IdentifierName* 中。也就是说，如果 \ *UnicodeEscapeSequence* 序列用 *UnicodeEscapeSequence* 的字符值替换以后的结果仍然应该是有效的 *IdentifierName* ，前后两个 *IdentifierName* 应该是完全一样的。本规范中对所有标记符的解释都是基于它们实际的字符串而不管是否有转义序列来代替某个特别的字符。
+
+按照Unicode标准两个完全相等的 *IdentifierName* 如果表示它们的编码单元序列完全相同才相等（也就是说，所有遵守ECMAScript的实现只被要求进行标记符名称的按位比较）。意图就是进来的源码文本在到达编译器之前已经被转换成常规化表格C。
+
+ECMAScript实现可能能识别定义在较新本班的Unicode标准中的标记字符。如果需要考虑可移植性，程序员应该只使用定义在Unicode3.0中的标记字符。
+
+**语法**
+
+> *Identifier*  ::  
+>
+>> *IdentifierName* **but not** *ReservedWord* 
+
+> *IdentifierName* ::  
+>
+>> *IdentifierStart* 
+>>
+>> *IdentifierName* *IdentifierPart*
+
+> *IdentifierStart*  ::  
+>
+>> *UnicodeLetter* 
+>>
+>> $ 
+>>
+>> _ 
+>>
+>> \ *UnicodeEscapeSequence* 
+
+> *IdentifierPart*  ::  
+>
+>> *IdentifierStart* 
+>>
+>> *UnicodeCombiningMark* 
+>>
+>> *UnicodeDigit* 
+>>
+>> *UnicodeConnectorPunctuation* 
+>>
+>> &lt;ZWNJ&gt; 
+>>
+>> &lt;ZWJ&gt; 
+
+> *UnicodeLetter* 
+>
+>> 在Unicode类目“大写字母（Lu）”、“小写字母（Ll）”、“标题大写字母（Lt）”、“修正符字母（Lm）”、“其他字母（Lo）”或“数字字母（Nl）”中的所有字符。
+
+> *UnicodeCombiningMark* 
+>
+>> 在Unicode类目“非空格标记（Mn）”或“组合间距标记（Mc）”中的所有字符。 
+
+> *UnicodeDigit* 
+>
+>> 在Unicode类目“十进制数（Nd）”中的所有字符。
+
+> *UnicodeConnectorPunctuation* 
+>
+>> 在Unicode类目“连接标点符（Pc）”中的所有字符。 
+
+> *UnicodeEscapeSequence* 
+>
+>> 见7.8.4。
+
 ### 7.6.1 保留字
+
+保留字是不能用作 *Identifier* 的 *IdentifierName* 。
+
+**语法**
+
+> *ReservedWord*  ::  
+>
+>> *Keyword* 
+>>
+>> *FutureReservedWord* 
+>>
+>> *NullLiteral* 
+>>
+>> *BooleanLiteral*
 
 ### 7.6.1.1 关键字
 
+以下单词是ECMAScript关键字，在ECMAScript程序中可能不会用作 *Identifiers* 。
+
+**语法**
+
+> *Keyword*  ::  **one of** 
+<table>
+<tr><td>break</td><td>do</td><td>instanceof</td><td>typeof</td></tr>
+<tr><td>case</td><td>else</td><td>new</td><td>var</td></tr>
+<tr><td>catch</td><td>finally</td><td>return</td><td>void</td></tr>
+<tr><td>continue</td><td>for</td><td>switch</td><td>while</td></tr>
+<tr><td>debugger</td><td>function</td><td>this</td><td>with</td></tr>
+<tr><td>default</td><td>if</td><td>throw</td></tr>
+<tr><td>delete</td><td>in</td><td>try</td></tr>
+</table>
+
 ### 7.6.1.2 未来保留字
+
+以下单词作为关键词中提出的扩展，因此保留，以便未来通过这些扩展的可能性。
+
+**语法**
+ 
+> *FutureReservedWord*  ::  **one of**  
+<table>
+<tr><td>class</td><td>enum</td><td>extends</td><td>super </td></tr>
+<tr><td>const</td><td>export</td><td>import</td></tr>
+</table>
+
+以下关键词如果出现在strict模式的代码中时将被看作是 *FutureReservedWords* 。在任何上下文的strict模式代码中任何 
+*FutureReservedWords* 出现会产生一个错误的地方出现以下这些令牌时也必须产生一个同等的错误：
+<table>
+<tr><td>implements</td><td>let</td><td>private</td><td>public</td><td>yield </td></tr>
+<tr><td>interface</td><td>package</td><td>protected</td><td>static</td></tr>
+</table>
 
 ## 7.7 标点符号
 
+**语法**
+
+> *Punctuator*  ::  **one of**  
+<table>
+<tr><td>{</td><td>}</td><td>(</td><td>)</td><td>[</td><td>]</td></tr>
+<tr><td>.</td><td>;</td><td>,</td><td>&lt;</td><td>&gt;</td><td>&lt;=</td></tr>
+<tr><td>&gt;=</td><td>==</td><td>!=</td><td>===</td><td>!==</td></tr>
+<tr><td>+</td><td>-</td><td>*</td><td>%</td><td>++</td><td>--</td></tr>
+<tr><td>&lt;&lt;</td><td>&gt;&gt;</td><td>&gt;&gt;&gt;</td><td>&</td><td>|</td><td>^</td></tr>
+<tr><td>!</td><td>~</td><td>&&</td><td>||</td><td>?</td><td>:</td></tr>
+<tr><td>=</td><td>+=</td><td>-=</td><td>*=</td><td>%=</td><td>&lt;&lt;=</td></tr>
+<tr><td>&gt;&gt;=</td><td>&gt;&gt;&gt;=</td><td>&=</td><td>|=</td><td>^=</td></tr>
+</table>
+
+> *DivPunctuator* ::  **one of**  
+<table>
+<tr><td>/</td><td>/=</td></tr>
+</table>
+
 ## 7.8 直接量
+
+**语法**
+
+> *Literal*  ::  
+>
+>> *NullLiteral* 
+>>
+>> *BooleanLiteral* 
+>>
+>> *NumericLiteral* 
+>>
+>> *StringLiteral*  
+>>
+>> *RegularExpressionLiteral* 
 
 ### 7.8.1 Null直接量
 
+**语法**
+
+> *NullLiteral*  ::  
+>
+>> null
+
+**语义**
+
+空直接量值 **null** 是Null类型唯一一个值，即 **null** 。
+
 ### 7.8.2 Boolean直接量
 
+**语法**
+
+> *BooleanLiteral* ::  
+>
+>> true 
+>>
+>> false
+
+**语义**
+
+Boolean直接量 **true** 是Boolean类型值，即 **true** 。
+Boolean直接量 **false** 是Boolean类型值，即 **false** 。
+
 ### 7.8.3 Number直接量
+
+**语法**
+
+> *NumericLiteral* ::  
+>
+>> *DecimalLiteral* 
+>>
+>> *HexIntegerLiteral* 
+
+> *DecimalLiteral* ::  
+>
+>> *DecimalIntegerLiteral* . *DecimalDigits* <sub>opt</sub>  *ExponentPart* <sub>opt</sub>
+>>
+>> . *DecimalDigits* *ExponentPart* <sub>opt</sub>
+>>
+>> *DecimalIntegerLiteral* *ExponentPart* <sub>opt</sub>
+ 
+> *DecimalIntegerLiteral*  ::  
+>
+>> 0 
+>>
+>> *NonZeroDigit* *DecimalDigits* <sub>opt</sub> 
+
+> *DecimalDigits* ::  
+>
+>> *DecimalDigit* 
+>>
+>> *DecimalDigits* *DecimalDigit* 
+
+> *DecimalDigit* ::  **one of**  
+>
+>> 0  1  2  3  4  5  6  7  8  9
+
+> *NonZeroDigit*  ::  **one of**  
+>
+>> 1  2  3  4  5  6  7  8  9 
+
+> *ExponentPart*  ::  
+>
+>> *ExponentIndicator* *SignedInteger* 
+
+> *ExponentIndicator*  ::  **one of** 
+>
+>> e  E
+
+> *SignedInteger*  ::  
+>
+>> *DecimalDigits* 
+>>
+>> + *DecimalDigits* 
+>>
+>> - *DecimalDigits* 
+
+> *HexIntegerLiteral* ::  
+>
+>> 0x *HexDigit* 
+>>
+>> 0X *HexDigit* 
+>>
+>> *HexIntegerLiteral* *HexDigit*
+
+> *HexDigit*  ::  **one of**    
+>
+>> 0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f  A  B  C  D  E  F
+
+紧跟在一个 *NumericLiteral* 之后的源码字符必须不是 *IdentifierStart* 或 *DecimalDigit* 。
+
+> 注：例如，
+>
+>> 3in
+>
+> 错误，并不是两个输入元素3和in。
+
+**语义**
+
+数字直接量表示Number类型的值。分两步决定该值：首先，从字面上推断一个数值（MV）；然后，根据以下规则处理数值：
+
+- *NumericLiteral* :: *DecimalLiteral* 的MV就是 *DecimalLiteral* 的MV。
+- *NumericLiteral* :: *HexIntegerLiteral* 的MV就是 *HexIntegerLiteral* 的MV。
+- *DecimalLiteral* :: *DecimalIntegerLiteral* . 的MV就是 *DecimalIntegerLiteral* 的MV。
+- *DecimalLiteral* :: *DecimalIntegerLiteral* . *DecimalDigits* 的MV就是 *DecimalIntegerLiteral* 的MV加上 *DecimalDigits* MV的 10<sup>-n</sup>倍， n 是 *DecimalDigits* 的字符数。
+- *DecimalLiteral* :: *DecimalIntegerLiteral* . *ExponentPart* 的MV就是 *DecimalIntegerLiteral* MV的 10<sup>e</sup>倍， e 就是 *ExponentPart* 的MV。
+- *DecimalLiteral* :: *DecimalIntegerLiteral* . *DecimalDigits* *ExponentPart* 的MV就是 *DecimalIntegerLiteral* 的MV加上 *DecimalDigits* MV的 10<sup>-n</sup>倍，然后再10<sup>e</sup>倍，其中 n 是 *DecimalDigits* 的字符数，e 就是 *ExponentPart* 的MV。
+- *DecimalLiteral* :: . *DecimalDigits* 的MV就是 *DecimalDigits* MV的 10<sup>-n</sup>倍，n 是 *DecimalDigits* 的字符数。
+- *DecimalLiteral* :: . *DecimalDigits* *ExponentPart* 的MV就是 DecimalDigits MV的10<sup>e-n</sup>倍，其中 n 是 *DecimalDigits* 的字符数，e 就是 *ExponentPart* 的MV。
+- *DecimalLiteral* :: *DecimalIntegerLiteral* 的MV就是 *DecimalIntegerLiteral* 的MV。
+- *DecimalLiteral* :: *DecimalIntegerLiteral* *ExponentPart* 的MV就是 DecimalIntegerLiteral MV的10<sup>e</sup>倍，e 就是 *ExponentPart* 的MV。
+- *DecimalIntegerLiteral* :: 0 的MV是 0。
+- *DecimalIntegerLiteral* :: *NonZeroDigit*  *DecimalDigits* 的MV就是 *NonZeroDigit* MV的10<sup>n</sup>倍，加上 *DecimalDigits* 的MV，n 就是 *DecimalDigits* 的字符数。
+- *DecimalDigits* :: *DecimalDigit* 的MV就是 *DecimalDigit* 的MV。
+- *DecimalDigits* :: *DecimalDigits*  *DecimalDigit* 的MV就是 DecimalDigits MV的10倍，加上 *DecimalDigit* 的MV。
+- *ExponentPart* :: *ExponentIndicator* *SignedInteger* 的MV就是 *SignedInteger* 的MV值。
+- *SignedInteger* :: *DecimalDigits* 的MV就是 *DecimalDigits* 的MV。
+- *SignedInteger* :: + *DecimalDigits* 的MV就是 *DecimalDigits* 的MV。
+- *SignedInteger* :: - *DecimalDigits* 的MV就是 *DecimalDigits* MV的负数。
+- *DecimalDigit* :: 0 或者 *HexDigit* :: 0 的MV是 0。
+- *DecimalDigit* :: 1 或者 *NonZeroDigit* :: 1 或者 *HexDigit* :: 1 的MV是 1。
+- *DecimalDigit* :: 2 或者 *NonZeroDigit* :: 2 或者 *HexDigit* :: 2 的MV是 2。
+- *DecimalDigit* :: 3 或者 *NonZeroDigit* :: 3 或者 *HexDigit* :: 3 的MV是 3。
+- *DecimalDigit* :: 4 或者 *NonZeroDigit* :: 4 或者 *HexDigit* :: 4 的MV是 4。
+- *DecimalDigit* :: 5 或者 *NonZeroDigit* :: 5 或者 *HexDigit* :: 5 的MV是 5。
+- *DecimalDigit* :: 6 或者 *NonZeroDigit* :: 6 或者 *HexDigit* :: 6 的MV是 6。
+- *DecimalDigit* :: 7 或者 *NonZeroDigit* :: 7 或者 *HexDigit* :: 7 的MV是 7。
+- *DecimalDigit* :: 8 或者 *NonZeroDigit* :: 8 或者 *HexDigit* :: 8 的MV是 8。
+- *DecimalDigit* :: 9 或者 *NonZeroDigit* :: 9 或者 *HexDigit* :: 9 的MV是 9。
+- *HexDigit* :: a 或者 *HexDigit* :: A 的MV是 10。
+- *HexDigit* :: b 或者 *HexDigit* :: B 的MV是 11。
+- *HexDigit* :: c 或者 *HexDigit* :: C 的MV是 12。
+- *HexDigit* :: d 或者 *HexDigit* :: D 的MV是 13。
+- *HexDigit* :: e 或者 *HexDigit* :: E 的MV是 14。
+- *HexDigit* :: f 或者 *HexDigit* :: F 的MV是 15。
+- *HexIntegerLiteral* :: 0x *HexDigit* 的MV就是 *HexDigit* 的MV。
+- *HexIntegerLiteral* :: 0X *HexDigit* 的MV就是 *HexDigit* 的MV。
+- *HexIntegerLiteral* :: *HexIntegerLiteral*  *HexDigit* 的MV就是 *HexIntegerLiteral* MV的16倍，加上 *HexDigit* 的MV。
+
+
+
 
 ### 7.8.4 String直接量
 
