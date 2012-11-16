@@ -511,8 +511,12 @@ Boolean直接量 **false** 是Boolean类型值，即 **false** 。
 - *HexIntegerLiteral* :: 0X *HexDigit* 的MV就是 *HexDigit* 的MV。
 - *HexIntegerLiteral* :: *HexIntegerLiteral*  *HexDigit* 的MV就是 *HexIntegerLiteral* MV的16倍，加上 *HexDigit* 的MV。
 
+一旦数字直接量确切的MV确定下来以后，就将其处理为一个Number类型的数值。如果MV是0，结果即为+0；否则，结果必须为该MV的Number数值（见8.5），除非是 *DecimalLiteral* 直接量，并且它的长度超过了20个有效数字，该Number数值可能是第20位后面的数字全被替换成0，或者第20位后面的数字全被替换成0并且将第20位有效数字加1。判断某个数字是否有效，它不该属于 *ExponentPart* 一部分，并且满足：
 
+- 不为0
+- 它左边有非零数字，右边有非零的不属于 *ExponentPart* 一部分的数字。
 
+一个遵守规范的实现，在处理strict模式代码时（见10.1.1），它必须如B.1.1所描述的那样不能将 *NumericLiteral* 的语法包含 *OctalIntegerLiteral* 。
 
 ### 7.8.4 String直接量
 
@@ -520,6 +524,119 @@ Boolean直接量 **false** 是Boolean类型值，即 **false** 。
 
 ## 7.9 分号自动插入
 
+某些ECMAScript语句（空语句，变量语句，表达式语句， **do-while** 语句， **continue** 语句， **break** 语句， **return** 语句， **throw** 语句）必须以分号终止。分号可能总是显示地在源代码文本中出现的。尽管如此，在某些场合为了方便，分号可以没有。这些场合就是被描述为所谓的分号自动插入到源代码令牌流中的那些情况。
+
 ### 7.9.1 分号自动插入的规则
 
+有三个基本的分号插入的规则：
+
+1. 程序自左向右解析，遇到一个令牌（叫作冒犯令牌）【译注：无效令牌】任何部件的语法都不允许的时候，那么在该无效令牌前自动插入一个分号。要满足以下两个条件之一为真（true）：
+	- 该无效令牌和前面的令牌之间至少有一个 *LineTerminator* 隔开。
+	- 该无效令牌是“}”。
+2. 程序自左向右解析，令牌输入流结束，解析器遇到的并非是一个完整的ECMAScript程序，那么在输入流结束自动插入一个分号。
+3. 程序自左向右解析，遇到一个令牌在某些部件的语法中是允许的，但该部件恰好是一个受限的部件，在其中该令牌（因此这样的令牌叫受限的令牌）如果是第一个紧随“[no *LineTerminator* here]”之后的为了终结或非终结的令牌，并且该受限的令牌和前面的令牌之间至少有一个 *LineTerminator* 隔开，那么在该受限令牌之间自动插入一个分号。
+
+但是，还有一个额外的覆盖性条件凌驾于处理规则之上：如果要插入的分号将被解析为一个空语句或者该分号可能成为 **for** 语句（见12.6.3）的前两个分号之一，那么该分号不会被自动插入。
+
+> 注：以下是仅有语法中的受限部件
+>
+> *PostfixExpression* : 
+>
+>> *LeftHandSideExpression*  [no  *LineTerminator* here]  ++ 
+>>
+>> *LeftHandSideExpression*   [no  *LineTerminator* here]  --
+
+> ContinueStatement  : 
+>
+>> **continue** [no  *LineTerminator* here]  *Identifier* <sub>opt</sub>; 
+
+> BreakStatement : 
+>
+>> **break**  [no  *LineTerminator* here]  *Identifier* <sub>opt</sub>; 
+
+> *ReturnStatement*  : 
+>
+>> **return** [ no *LineTerminator* here]  *Expression* <sub>opt</sub>; 
+
+> ThrowStatement  : 
+>
+>> *throw*  [no  *LineTerminator* here]  *Expression*  ; 
+
+这受限部件的实际影响如下：
+
+当遇到一个 ++ 或 -- 令牌，解析器可能将其看作为后缀操作符。在前面的令牌与该 ++ 或 -- 令牌中间遇到至少一个 *LineTerminator* ，那么分号自动插入到 ++ 或 -- 令牌之前。
+
+当一个 **continue** 、 **break** 、 **return** 或 **throw** 令牌遇到下个令牌之前就遇到一个 *LineTerminator* ，那么分号自动插入到上述令牌之后。
+
+针对ECMAScript程序员的最佳实践是：
+
+- 后缀 ++ 或 -- 操作符必须和操作数在同一行。
+- 在一个 **return** 或 **throw** 语句中的 *Expression* 必须与该 **return** 或 **throw** 令牌在同一行。
+- 在一个 **break** 或 **continue** 语句中个 *Identifier* 必须与该 **break** 或 **continue** 令牌在同一行。
+
 ### 7.9.2 分号自动插入的例子
+
+源代码：
+
+	{ 1 2 } 3
+
+在ECMAScript语法中不是有效的句子，甚至在分号自动插入以后也是无效的。对比，以下源代码：
+
+	{ 1 
+	2 } 3
+
+也是一个无效的ECMAScript句子，但是经过分号自动插入的处理，如下：
+
+	{ 1 
+	;2 ;} 3;
+
+它就转换成了一个有效的ECMAScript句子。
+
+源代码：
+
+	for (a; b 
+	)
+
+它是一个无效的ECMAScript句子，但是分号自动插入不修改这个句子，因为分号在 for 语句中的头部是有其用处的。分号自动插入不会给 for 语句的头部插入它所需的两个分号的任何一个。
+
+源代码：
+
+	return
+	a + b
+
+它经过分号自动插入的转换，如下：
+
+	return;
+	a + b;
+
+> 注：表达式 a + b 不会被 return 语句看作是需要返回的值，因为在 **return** 之后有一个 *LineTerminator* 将两者隔开了。
+
+源代码：
+
+	a = b
+	++c
+
+它经过分号自动插入的转换，如下：
+
+	a = b;
+	++c;
+
+> 注：令牌 ++ 没有被看作是变量 b 的后缀操作符，因为 b 和 ++ 之间有一个 *LineTerminator* 将两者隔开了。
+
+源代码：
+
+	if (a > b)
+	else c = d
+
+它是一个无效的ECMAScript句子，但是分号自动插入不修改这个句子，在这一点上没有语法部件可以应用得上，因为分号自动插入将会变成一个空语句，所以不能插入。
+
+源代码：
+
+	a = b + c
+	(d + e).print()
+
+分号自动插入不会修改这个句子，因为第二行开始的圆括号表达式可以被解析为 c 这个函数的参数：
+
+	a = b + c(d + e).print()
+
+在有以左圆括号开始的赋值语句的情况下，最好在前面的语句的结束显式地书写一个分号，而不是寄希望于分号自动插入。
