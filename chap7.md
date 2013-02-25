@@ -82,7 +82,7 @@ ECMAScript实现必须识别定义在Unicode3.0中所有的空白符。较新版
 
 **语法**
 
-> *WhiteSpace* ::  
+> *WhiteSpace* :: 
 >
 >> &lt;TAB&gt; 
 >>
@@ -121,7 +121,7 @@ ECMAScript实现必须识别定义在Unicode3.0中所有的空白符。较新版
 
 **语法**
 
-> LineTerminator  ::  
+> LineTerminator  :: 
 >
 >> &lt;LF&gt; 
 >>
@@ -131,7 +131,7 @@ ECMAScript实现必须识别定义在Unicode3.0中所有的空白符。较新版
 >>
 >> &lt;PS&gt; 
 
-> LineTerminatorSequence ::  
+> LineTerminatorSequence :: 
 >
 >> &lt;LF&gt; 
 >> 
@@ -153,7 +153,7 @@ ECMAScript实现必须识别定义在Unicode3.0中所有的空白符。较新版
 
 **语法**
 
-> *Comment* ::  
+> *Comment* ::
 >
 >> *MultiLineComment* 
 >>

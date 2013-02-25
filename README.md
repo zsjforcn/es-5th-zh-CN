@@ -80,7 +80,7 @@ ECMA-262标准第5版/2009年12月
 		* 8.12.6 \[[HasProperty]](P)
 		* 8.12.7 \[[Delete]](P, Throw)
 		* 8.12.8 \[[DefaultValue]](hint)
-		* 8.12.9 \[[DefinOwnProperty]](P, Desc, Throw)
+		* 8.12.9 \[[DefineOwnProperty]](P, Desc, Throw)
 
 * 9 类型转换和测试
 	* 9.1 ToPrimitive
