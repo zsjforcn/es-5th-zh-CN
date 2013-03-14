@@ -22,7 +22,7 @@ Boolean类型代表一个逻辑实体拥有两个值，即true或false。
 
 # 8.4 String类型
 
-String类型是有限个有顺序的一些零个或多个16位无符号整数（“元素”）的集合。String类型常常用来表示一个正在运行的ECMAScript程序中的文本数据。
+String类型是有限个有顺序的零或多个16位无符号整数（“元素”）的集合。String类型常常用来表示一个正在运行的ECMAScript程序中的文本数据。
 
 # 8.5 Number类型
 
