@@ -46,7 +46,7 @@ ECMAScript不像C++、Smalltalk或Java一样使用类，取而代之，它的对
 
 不直接包含特定的属性的所有对象都共享了原型链的属性和值。如图1所示：
 
-![assets/f1.png](assets/f1.png)
+![](https://raw.github.com/zsjforcn/es-5th-zh-CN/assets/f1.png)
 
 CF是一个构造器（也是一个对象）。使用new表达式创建了五个对象分别是：cf1、cf2、cf3、cf4和cf5。每个对象包含了名字为q1和q2的属性。点线表示隐式原型关系，故，例如cf3的原型是CFp。构造器CF自己有两个属性P1和P2，这两个属性对CFp、cf1、cf2、cf3、cf4或cf5是不可见的。在CFp中的属性CFP1除了对CF以外，对cf1、cf2、cf3、cf4和cf5是共享的。在CFp的隐式原型链上还有很多非q1、q2和CFP1命名的属性。注意，在CF和CFp之间没有隐式的原型关系。
 
