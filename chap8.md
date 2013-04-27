@@ -62,10 +62,77 @@ Number类型事实上有18437736874454810627个值（也就是2^64-2^53+3个）�
 
 # 8.6 Object类型
 
+Object是属性的一个集合。一个属性可能是一个数据属性，或者是一个访问器，或者是内部属性：
+
+* 数据属性与一个ECMAScript语言值名字以及一组Boolean特征值相关联。
+* 访问器属性与一个或多个访问器函数名字以及一组Boolean特征值相关联。访问器函数存放着或者获取一个与之关联的ECMAScript语言值。
+* 内部属性没有名字，也不能通过ECMAScript语言操作符直接访问到。内部属性纯粹是为了技术规范说明目的而存在的。
+
+属性（非内部）的访问方式有两种： *get* 和 *put* ，分别对应于获取和赋值两个操作。
 
 ## 8.6.1 属性的特征值
+
+特征值在本规范中是用来定义和解释属性的所处的状态。数据属性关联的一些特征值如下表5。
+
+<table>
+<caption>表5——数据属性的特征值</caption>
+<tr><th>特征名</th><th>值域</th><th>描述</th></tr>
+<tr><td>[[Value]]</td><td>任何ECMAScript语言类型</td><td>读取属性来获取该值。</td></tr>
+<tr><td>[[Writable]]</td><td>Boolean</td><td>如果是false：使用ECMAScript代码通过[[Put]]修改属性的[[Value]]将会失败。</td></tr>
+<tr><td>[[Enumerable]]</td><td>Boolean</td><td>如果是true：该属性可以通过for-in枚举到。否则，它不可枚举。</td></tr>
+<tr><td>[[Configurable]]</td><td>Boolean</td><td>如果是false：试图删除该属性，或者改变属性为访问器属性，或者修改它的特征值都将失败。不影响修改它的[[Value]]。</td></tr>
+</table>
+
+访问器属性关联的一些特征值如下表6。
+
+<table> 
+<caption>表6——访问器属性的特征值</caption>
+<tr><th>特征名</th><th>值域</th><th>描述</th></tr>
+<tr><td>[[Get]]</td><td>对象或者undefined</td><td>如果该值是对象，必须为Function对象。每次该属性上操作一次get访问，该函数的内部方法[[Call]]就会被调用一次（参数列表为空），它的返回值就是该属性值。</td></tr>
+<tr><td>[[Set]]</td><td>对象或者undefined</td><td>如果该值是对象，必须为Function对象。每次该属性上操作一次set访问，该函数的内部方法[[Call]]就会被调用一次，参数列表就是唯一用来赋予的值。该内部方法“可能但不一定”对该属性的[[Get]]内部方法返回的值造成影响。</td></tr>
+<tr><td>[[Enumerable]]</td><td>Boolean</td><td>如果是true：该属性可以通过for-in枚举到。否则，它不可枚举。</td></tr>
+<tr><td>[[Configurable]]</td><td>Boolean</td><td>如果是false：试图删除该属性，或者改变属性为数据属性，或者修改它的特征值都将失败。</td></tr>
+</table>
+
+如果一个特征值没有在本规范中显式地指定，表7中给出了默认的特征值定义。
+
+<table>
+<caption>表7——默认特征值</caption>
+<tr><th>特征名</th><th>默认值</th></tr>
+<tr><td>[[Value]]</td><td>undefined</td></tr>
+<tr><td>[[Get]]</td><td>undefined</td></tr>
+<tr><td>[[Set]]</td><td>undefined</td></tr>
+<tr><td>[[Writable]]</td><td>false</td></tr>
+<tr><td>[[Enumerable]]</td><td>false</td></tr>
+<tr><td>[[Configurable]]</td><td>false</td></tr>
+</table>
+
 ## 8.6.2 对象的内部属性和方法
 
+本规范使用了各种各样的内部属性来定义对象值的语义。这些内部属性并不是ECMAScript语言的一部分。它们在本规范中定义纯粹是为了说明的目的。ECMAScript的一种实现的行为必须同这里描述相一致的方式来产生和操作这些内部属性。这里的内部属性用双方括号“[[ ]]”包围表示。每当一个算法需要使用一个对象的内部属性时，如果该对象没有实现该内部属性，程序将抛出一个 **TypeError** 异常。
+
+表8总结了本规范中使用的内部属性，它们在所有ECMAScript对象中得到应用。表9总结的内部属性在本规范使用，但只在某些ECMAScript对象中得到应用。这些表格中的描述是用来说明原生ECMAScript对象的行为，除非特别说明，否则针对特殊类型的原生ECMAScript对象的说明限定在本文档中。
+
+宿主对象也可能支持这些内部属性，前提条件是它的依赖实现的行为和本文档中陈述的宿主对象限制规范相一致。
+
+下表中的“值类型域”这一列定义了与内部属性相关的值得类型。类型名指的就是第8章中定义的类型，再加下面一些额外的名字。“any”表示可以是任何ECMAScript语言类型。“primitive”表示 Undefined、Null、Boolean、String或者Number。“SpecOp”表示该内部属性是一个内部方法，它由一个实现所产出，由一个抽象操作规范所定义。“SpecOp”紧跟其后的是描述性形参名。如果形参名和一个类型名相同，那么这个参数就是这个类型。如果一个“SpecOp”有一个返回值，参数在符号“→”后面列出，以及返回值的类型。
+
+<table>
+<caption>表8——对所有对象通用的内部属性</caption>
+<tr><th>内部属性</th><th>值类型域</th><th>描述</th></tr>
+<tr><td>[[Prototype]]</td><td>对象或者null</td><td>该对象的属性。</td></tr>
+<tr><td>[[Class]]</td><td>String</td><td>表示对象分类具体定义的一个字符串值。</td></tr>
+<tr><td>[[Extensible]]</td><td>Boolean</td><td>如果是true：自有属性可以添加对象上。</td></tr>
+<tr><td>[[Get]]</td><td>SpecOp(propertyName) → any</td><td>返回对应名字的属性值。</td></tr>
+<tr><td>[[GetOwnProperty]]</td><td>SpecOp (propertyName) → undefined或者属性描述符</td><td>返回该对象上“自有”属性中对应名字的属性描述符，如果不存在就返回undefined。</td></tr>
+<tr><td>[[GetProperty]]</td><td>SpecOp (propertyName) → undefined或者属性描述符</td><td>返回该对象上所有“根植”属性中对应名字的属性描述符，如果不存在就返回undefined。</td></tr>
+<tr><td>[[Put]]</td><td>SpecOp (propertyName, any, Boolean)</td><td>将对应名字属性的值设置为第二个参数的值。标记位控制了失败处理句柄。</td></tr>
+<tr><td>[[CanPut]]</td><td>SpecOp (propertyName) → Boolean</td><td>返回一个Boolean值，表示对应名字的属性上是否可以进行[[Put]]操作。</td></tr>
+<tr><td>[[HasProperty]]</td><td>SpecOp (propertyName) → Boolean</td><td>返回一个Boolean值，表示给定名字的属性是否在对象中存在。</td></tr>
+<tr><td>[[Delete]]</td><td>SpecOp (propertyName, Boolean) → Boolean</td><td>从对象中删除指定名字的自有属性。标记位控制了失败处理句柄。</td></tr>
+<tr><td>[[DefaultValue]]</td><td>SpecOp (Hint) → primitive</td><td>Hint是一个字符串。为对象返回默认值。</td></tr>
+<tr><td>[[DefineOwnProperty]]</td><td>SpecOp (propertyName, PropertyDescriptor, Boolean) → Boolean</td><td>创建或修改对应名字的自有属性，从而拥有对应属性描述符表示的状态。标记位控制了失败处理句柄。</td></tr>
+</table>
 
 # 8.7 引用类型
 
